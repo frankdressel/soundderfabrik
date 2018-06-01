@@ -1,0 +1,59 @@
+---
+- name: setup sdf
+  hosts: localhost
+  become: true
+
+  tasks:
+    - name: download miniconda
+      get_url:
+        url: https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        dest: /tmp/Miniconda3-latest-Linux-x86_64.sh
+        mode: 'u+rwx'
+
+    - name: install miniconda
+      command: "bash Miniconda3-latest-Linux-x86_64.sh -b -p /home/vagrant/miniconda"
+      args:
+        chdir: /tmp 
+        creates: /home/vagrant/miniconda
+      become: yes
+      become_user: vagrant
+
+    - name: add lines to .bashrc
+      blockinfile:
+        path: "/home/vagrant/.bashrc"
+        block: |
+          PATH=$HOME/miniconda/bin:$PATH
+          source $HOME/miniconda/bin/activate
+
+    - name: add musescore ppa
+      apt_repository:
+        repo: ppa:mscore-ubuntu/mscore-stable
+
+    - name: install musecore
+      apt:
+        name: musescore
+        update_cache: true
+
+    - name: install timidity
+      apt:
+        name: timidity
+
+    - name: install sounds
+      apt:
+        name: fluid-soundfont-gm
+
+    - name: add sounds to config
+      shell: sed -e 's|^source|#source|' -e '$a source /etc/timidity/fluidr3_gm.cfg' -i /etc/timidity/timidity.cfg
+
+    - name: restart timidity
+      shell: /etc/init.d/timidity restart
+
+    - name: install music21
+      shell: /home/vagrant/miniconda/bin/pip install music21
+      become: yes
+      become_user: vagrant
+
+    - name: set pathin path
+      shell: /home/vagrant/miniconda/bin/python -c "from music21 import *;environment.set('midiPath', '/usr/bin/timidity');environment.set('musicxmlPath', '/usr/bin/musescore')"
+      become: yes
+      become_user: vagrant
