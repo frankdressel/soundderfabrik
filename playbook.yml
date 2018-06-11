@@ -74,3 +74,5 @@
       git:
         repo: https://github.com/Audiveris/audiveris.git
         dest: /home/vagrant/audiveris 
+      become: yes
+      become_user: vagrant
