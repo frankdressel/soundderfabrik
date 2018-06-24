@@ -48,31 +48,13 @@
       become: yes
       become_user: vagrant
 
-    - name: set pathin path
+    - name: set paths
       shell: /home/vagrant/miniconda/bin/python -c "from music21 import *;environment.set('midiPath', '/usr/bin/timidity');environment.set('musicxmlPath', '/usr/bin/musescore')"
       become: yes
       become_user: vagrant
 
-    - name: Install tesseract
-      apt: name={{item}}
-      with_items:
-        - tesseract-ocr
-        - tesseract-ocr-deu
-        - tesseract-ocr-ita
-        - tesseract-ocr-eng
-        - tesseract-ocr-fra
-
-    - name: Install Java8
-      apt:
-        name: openjdk-8-jdk
-
-    - name: Install gradle
-      apt:
-        name: gradle
-
-    - name: Clone audiveris
-      git:
-        repo: https://github.com/Audiveris/audiveris.git
-        dest: /home/vagrant/audiveris 
+    - name: Install python-ly
+      pip:
+        name: python-ly
       become: yes
       become_user: vagrant
