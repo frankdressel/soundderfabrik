@@ -1,14 +1,8 @@
 # coding: utf-8
-import collections
 import fractions
 import numpy
-import os
-import requests
 import sklearn.pipeline
 import sklearn.preprocessing
-import tempfile
-
-import ly.document
 import ly.music
 doc=ly.document.Document.load('/home/vagrant/Downloads/Sheep.ly')
 d=ly.music.document(doc)
@@ -49,13 +43,20 @@ for i in range(len(relatives)):
 
 def preprocessing(notes):
     namecat=sklearn.preprocessing.LabelEncoder().fit_transform([n["name"] for n in notes])
-    onehotencoded=sklearn.preprocessing.OneHotEncoder().fit_transform([[n] for n in namecat]).todense()    
+    onehotencoded=sklearn.preprocessing.OneHotEncoder().fit_transform([[n] for n in namecat]).todense()
 
     numerator=[n["length"].numerator for n in notes]
     denominator=[n["length"].denominator for n in notes]
 
     return numpy.append(numpy.append(onehotencoded, [[n] for n in numerator], axis=1), [[d] for d in denominator], axis=1)
-    #return zip(namecat, numerator, denominator)
 
-data=preprocessing(notes)
-print(data)
+data=preprocessing(notes).getA()
+print(data.shape)
+
+sequenceLength=10
+input=numpy.zeros((len(data)-sequenceLength, sequenceLength, len(data[0])))
+output=numpy.zeros((len(data)-sequenceLength, 1, len(data[0])))
+for i in range(0, len(data)-sequenceLength):
+    for j in range(sequenceLength):
+        input[i, j]=data[i+j]
+    output[i, 0]=data[i+sequenceLength]
