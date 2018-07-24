@@ -13,7 +13,7 @@ class MyTestCase(unittest.TestCase):
 
         result=leval.fit((input_x, input_y))
 
-        # Hote encoding and softmax: Should be close with 1% deviation.
+        # Hot encoding and softmax: Should be close with 1% deviation.
         self.assertTrue(numpy.allclose(input_y, result, atol=1e-02))
 
 if __name__ == '__main__':
