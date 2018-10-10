@@ -3,7 +3,7 @@ from collections import Counter
 from dataclasses import dataclass
 import numpy
 import random
-
+import sys
 import mido
 
 
@@ -35,7 +35,7 @@ class StreamProcessor:
             for index, msg in enumerate([s for s in stream if not s.is_meta]):
                 if msg.time is not None:
                     time = time + msg.time
-                if msg.channel == channel:
+                if msg.channel == channel and msg.type == "note_on":
                     if msg.note in current_notes:
                         start_time = current_notes[msg.note]
                         notes_at_starttime = notes.get(start_time, [])
@@ -209,7 +209,7 @@ class AnalyserTest(unittest.TestCase):
 
 if __name__ == '__main__':
 
-    mid = mido.midifiles.MidiFile("/home/frank/Downloads/alkan-op31-8.mid")
+    mid = mido.midifiles.MidiFile(sys.argv[1])
     notes = StreamProcessor().stream_to_notes([m for m in mid.tracks[1]])[0]
 
     analyser = Analyser()
@@ -223,9 +223,9 @@ if __name__ == '__main__':
         reduced_ngrams[reduced] = l
 
     for i in range(500):
-        lasttwo = NGram(tuple(notes[-2:]))
-        if lasttwo in reduced_ngrams:
-            c = Counter(reduced_ngrams[lasttwo])
+        lastthree = NGram(tuple(notes[-2:]))
+        if lastthree in reduced_ngrams:
+            c = Counter(reduced_ngrams[lastthree])
             total = sum(c.values())
             rand = random.randint(0, total)
             summed = 0
@@ -235,15 +235,27 @@ if __name__ == '__main__':
                     notes.append(k)
                     break
         else:
-            c = Counter(notes)
-            total = sum(c.values())
-            rand = random.randint(0, total)
-            summed = 0
-            for k in c.keys():
-                summed = summed + c[k]
-                if summed >= rand:
-                    notes.append(k)
-                    break
+            lasttwo = NGram(tuple(notes[-2:]))
+            if lasttwo in reduced_ngrams:
+                c = Counter(reduced_ngrams[lasttwo])
+                total = sum(c.values())
+                rand = random.randint(0, total)
+                summed = 0
+                for k in c.keys():
+                    summed = summed + c[k]
+                    if summed >= rand:
+                        notes.append(k)
+                        break
+            else:
+                c = Counter(notes)
+                total = sum(c.values())
+                rand = random.randint(0, total)
+                summed = 0
+                for k in c.keys():
+                    summed = summed + c[k]
+                    if summed >= rand:
+                        notes.append(k)
+                        break
 
     mid_out = mido.MidiFile(type=1, ticks_per_beat = mid.ticks_per_beat)
     mid_out.tracks.append(mid.tracks[0])
